@@ -46,6 +46,12 @@ type configuration struct {
 	// ListenAddrs is the list of server's listen addresses.
 	ListenAddrs []string `yaml:"listen-addrs"`
 
+	// DoHOnly makes the proxy serve only DNS-over-HTTPS requests.
+	DoHOnly bool `yaml:"doh-only"`
+
+	// HTTPSPath is the custom path for DNS-over-HTTPS requests.
+	HTTPSPath string `yaml:"https-path"`
+
 	// DoHRoutes is the list of routes for DNS-over-HTTPS.  It must be a slice
 	// of valid route patterns, if it is empty, the default routes are
 	// registered.

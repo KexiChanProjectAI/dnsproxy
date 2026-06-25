@@ -97,6 +97,14 @@ type Config struct {
 	// DoH server.  If nil, the DoH server is disabled.
 	HTTPConfig *HTTPConfig
 
+	// DoHOnly, if true, makes the proxy serve only DNS-over-HTTPS requests.
+	// All other listeners are not started.
+	DoHOnly bool
+
+	// HTTPSPath is the custom path for DNS-over-HTTPS requests.  If empty, the
+	// default path is used.
+	HTTPSPath string
+
 	// DNSCryptProviderName is the DNSCrypt provider name.  Required for
 	// DNSCrypt server.
 	DNSCryptProviderName string
@@ -346,6 +354,10 @@ func (p *Proxy) validateListenAddrs() (err error) {
 		return fmt.Errorf("listen addresses: %w", errors.ErrNoValue)
 	}
 
+	if p.DoHOnly {
+		return nil
+	}
+
 	err = p.validateTLSConfig()
 	if err != nil {
 		return fmt.Errorf("invalid tls configuration: %w", err)
@@ -388,6 +400,10 @@ func (p *Proxy) validateTLSConfig() (err error) {
 
 // hasListenAddrs - is there any addresses to listen to?
 func (p *Proxy) hasListenAddrs() (ok bool) {
+	if p.DoHOnly {
+		return p.HTTPConfig != nil && p.HTTPConfig.ListenAddresses != nil
+	}
+
 	return p.UDPListenAddr != nil ||
 		p.TCPListenAddr != nil ||
 		p.TLSListenAddr != nil ||

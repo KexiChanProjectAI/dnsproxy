@@ -70,6 +70,8 @@ const (
 	dohRoutesIdx
 	dohInsecureEnabledIdx
 	dnssecEnabledIdx
+	dohOnlyIdx
+	httpsPathIdx
 )
 
 // commandLineOption contains information about a command-line option: its long
@@ -426,6 +428,19 @@ var commandLineOptions = []*commandLineOption{
 		short:       "",
 		valueType:   "",
 	},
+	dohOnlyIdx: {
+		description: "If specified, the proxy will only serve DNS-over-HTTPS requests.",
+		long:        "doh-only",
+		short:       "",
+		valueType:   "",
+	},
+	httpsPathIdx: {
+		description: "Custom path for DNS-over-HTTPS requests.  If not specified, the " +
+			"default path is used.",
+		long:      "https-path",
+		short:     "",
+		valueType: "path",
+	},
 }
 
 // parseCmdLineOptions parses the command-line options.  conf must not be nil.
@@ -488,6 +503,8 @@ func parseCmdLineOptions(conf *configuration) (err error) {
 		dohRoutesIdx:                &conf.DoHRoutes,
 		dohInsecureEnabledIdx:       &conf.DoHInsecureEnabled,
 		dnssecEnabledIdx:            &conf.DNSSECEnabled,
+		dohOnlyIdx:                  &conf.DoHOnly,
+		httpsPathIdx:                &conf.HTTPSPath,
 	} {
 		addOption(flags, fieldPtr, commandLineOptions[i])
 	}

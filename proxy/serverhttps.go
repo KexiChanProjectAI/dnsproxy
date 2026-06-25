@@ -202,6 +202,13 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	p.logger.DebugContext(ctx, "incoming https request", "url", r.URL)
 
+	if p.HTTPSPath != "" && r.URL.Path != p.HTTPSPath {
+		statusCode := http.StatusNotFound
+		http.Error(w, http.StatusText(statusCode), statusCode)
+
+		return
+	}
+
 	if !p.HTTPConfig.InsecureEnabled && r.TLS == nil {
 		statusCode := http.StatusNotFound
 		http.Error(w, http.StatusText(statusCode), statusCode)

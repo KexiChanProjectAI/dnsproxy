@@ -109,6 +109,15 @@ func createProxyConfig(
 			Enabled: conf.PendingRequestsEnabled,
 		},
 		HTTPConfig: httpConf,
+		DoHOnly:    conf.DoHOnly,
+		HTTPSPath:  conf.HTTPSPath,
+	}
+
+	if conf.DoHOnly {
+		proxyConf.UDPListenAddr = nil
+		proxyConf.TCPListenAddr = nil
+		proxyConf.TLSListenAddr = nil
+		proxyConf.QUICListenAddr = nil
 	}
 
 	conf.initBogusNXDomain(ctx, l, proxyConf)
@@ -412,6 +421,14 @@ func (conf *configuration) initListenAddrs(config *proxy.Config) (err error) {
 		return fmt.Errorf("parsing listen addresses: %w", err)
 	}
 
+	if conf.DoHOnly {
+		if config.TLSConfig != nil {
+			initTLSListenAddrs(config, conf, addrs)
+		}
+
+		return nil
+	}
+
 	if len(conf.ListenPorts) == 0 {
 		// If ListenPorts has not been parsed through config file nor command
 		// line we set it to 53.
@@ -444,9 +461,11 @@ func (conf *configuration) initListenAddrs(config *proxy.Config) (err error) {
 func initTLSListenAddrs(proxyConf *proxy.Config, conf *configuration, addrs []netip.Addr) {
 	httpConfig := proxyConf.HTTPConfig
 	for _, ip := range addrs {
-		for _, port := range conf.TLSListenPorts {
-			a := net.TCPAddrFromAddrPort(netip.AddrPortFrom(ip, port))
-			proxyConf.TLSListenAddr = append(proxyConf.TLSListenAddr, a)
+		if !conf.DoHOnly {
+			for _, port := range conf.TLSListenPorts {
+				a := net.TCPAddrFromAddrPort(netip.AddrPortFrom(ip, port))
+				proxyConf.TLSListenAddr = append(proxyConf.TLSListenAddr, a)
+			}
 		}
 
 		for _, port := range conf.HTTPSListenPorts {
@@ -454,9 +473,11 @@ func initTLSListenAddrs(proxyConf *proxy.Config, conf *configuration, addrs []ne
 			httpConfig.ListenAddresses = append(httpConfig.ListenAddresses, a)
 		}
 
-		for _, port := range conf.QUICListenPorts {
-			a := net.UDPAddrFromAddrPort(netip.AddrPortFrom(ip, port))
-			proxyConf.QUICListenAddr = append(proxyConf.QUICListenAddr, a)
+		if !conf.DoHOnly {
+			for _, port := range conf.QUICListenPorts {
+				a := net.UDPAddrFromAddrPort(netip.AddrPortFrom(ip, port))
+				proxyConf.QUICListenAddr = append(proxyConf.QUICListenAddr, a)
+			}
 		}
 	}
 }
